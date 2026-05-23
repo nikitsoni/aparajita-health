@@ -8,14 +8,18 @@ import {
 
 // ── Medications ──────────────────────────────────────────────
 const MEDS = [
-  { id:"stamlo",     name:"Stamlo 5mg",  generic:"Amlodipine 5mg",      purpose:"Blood Pressure",     slot:"morning", color:"#B48EFF" },
-  { id:"tofanol",    name:"Tofanol",     generic:"Tofacitinib",         purpose:"Rheumatoid Arthritis",slot:"morning", color:"#7EB8F7" },
-  { id:"purevise",   name:"Purevise 60k",generic:"Vitamin D3 60,000 IU",purpose:"Vitamin D",          slot:"morning", color:"#F7C948", sundayOnly:true },
-  { id:"concuims_m", name:"Concuims XT", generic:"Curcumin XT",         purpose:"Anti-inflammatory",  slot:"morning", color:"#F5A623", doseLabel:"Morning dose" },
-  { id:"concuims_n", name:"Concuims XT", generic:"Curcumin XT",         purpose:"Anti-inflammatory",  slot:"night",   color:"#F5A623", doseLabel:"Night dose" },
-  { id:"lupicheme",  name:"Lupicheme",   generic:"Hydroxychloroquine",  purpose:"Autoimmune / RA",    slot:"morning", color:"#D9A0FF" },
-  { id:"noren_m",    name:"Noren MD",    generic:"Norethindrone",       purpose:"Hormonal",           slot:"morning", color:"#FF9CC2", doseLabel:"Morning dose" },
-  { id:"noren_n",    name:"Noren MD",    generic:"Norethindrone",       purpose:"Hormonal",           slot:"night",   color:"#FF9CC2", doseLabel:"Night dose" },
+  // ── Morning (after breakfast) ───────────────────────────
+  { id:"stamlo",    name:"Stamlo 5mg",  generic:"Amlodipine 5mg",      purpose:"Blood Pressure",     slot:"morning",   color:"#B48EFF", note:"After breakfast", doctor:"Dr. Hansra" },
+  { id:"lupicheme", name:"Lupicheme",   generic:"Hydroxychloroquine",  purpose:"Autoimmune / RA",    slot:"morning",   color:"#D9A0FF", doctor:"Dr. Sunaina Dubey" },
+  { id:"noren_m",   name:"Noren MD",    generic:"Norethindrone",       purpose:"Hormonal",           slot:"morning",   color:"#FF9CC2", doseLabel:"Morning dose", doctor:"Dr. Sunaina Dubey" },
+  { id:"trazer_m",  name:"Trazer HD",   generic:"Powder supplement",   purpose:"Bone & Nutrition",   slot:"morning",   color:"#4ECCA3", note:"After breakfast · powder", doctor:"Dr. Sunaina Dubey", isPowder:true },
+  // ── Afternoon (Sunday only) ─────────────────────────────
+  { id:"purevise",  name:"Purevise 60k",generic:"Vitamin D3 60,000 IU",purpose:"Vitamin D",          slot:"afternoon", color:"#F7C948", sundayOnly:true, note:"After lunch", doctor:"Dr. Sunaina Dubey" },
+  // ── Night / Dinner ──────────────────────────────────────
+  { id:"concuims_n",name:"Concuims XT", generic:"Curcumin XT",         purpose:"Anti-inflammatory",  slot:"night",     color:"#F5A623", note:"After dinner", doctor:"Dr. Sunaina Dubey" },
+  { id:"noren_n",   name:"Noren MD",    generic:"Norethindrone",       purpose:"Hormonal",           slot:"night",     color:"#FF9CC2", doseLabel:"Night dose", doctor:"Dr. Sunaina Dubey" },
+  { id:"trazer_n",  name:"Trazer HD",   generic:"Powder supplement",   purpose:"Bone & Nutrition",   slot:"night",     color:"#4ECCA3", note:"After dinner · powder", doctor:"Dr. Sunaina Dubey", isPowder:true },
+  { id:"tofanol",   name:"Tofanol 5mg", generic:"Tofacitinib 5mg",     purpose:"Rheumatoid Arthritis",slot:"night",    color:"#7EB8F7", note:"After dinner", doctor:"Dr. Nitesh Jain" },
 ];
 
 // ── Quotes ───────────────────────────────────────────────────
@@ -330,9 +334,10 @@ export default function AparajitaHealth(){
   },[exportMonth, exportYear]);
 
   // ── Derived ─────────────────────────────────────────────────
-  const countableMeds = MEDS.filter(m=>!m.sundayOnly||isSunday());
-  const morning  = MEDS.filter(m=>m.slot==="morning");
-  const night    = MEDS.filter(m=>m.slot==="night");
+  const countableMeds  = MEDS.filter(m=>!m.sundayOnly||isSunday());
+  const morning        = MEDS.filter(m=>m.slot==="morning");
+  const afternoon      = MEDS.filter(m=>m.slot==="afternoon");
+  const night          = MEDS.filter(m=>m.slot==="night");
   const taken    = countableMeds.filter(m=>medLog[m.id]).length;
   const total    = countableMeds.length;
   const pct      = total>0?taken/total:0;
@@ -443,56 +448,49 @@ export default function AparajitaHealth(){
             </div>
           </div>
 
-          {/* Morning */}
-          <div>
-            <div className="sec">🌅 Morning</div>
-            <div style={{display:"flex",flexDirection:"column",gap:".45rem"}}>
-              {morning.map(m=>{
-                const locked=m.sundayOnly&&!isSunday();
-                return(
-                  <div key={m.id} className={`med-row${(medLog[m.id]||locked)?" taken":""}`}
-                    style={locked?{opacity:.48,cursor:"default"}:{}}
-                    onClick={()=>!locked&&toggleMed(m.id,countableMeds)}>
-                    <div className={`check${medLog[m.id]?" done":""}${popId===m.id?" pop":""}`}
-                      style={{borderColor:medLog[m.id]?"#4ECCA3":locked?"var(--dim)":m.color}}>
-                      {medLog[m.id]&&"✓"}
-                    </div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:".9rem",fontWeight:600,color:(medLog[m.id]||locked)?"var(--dim)":"var(--text)",textDecoration:medLog[m.id]?"line-through":"none"}}>
-                        {m.name}{m.doseLabel&&<span style={{fontSize:".65rem",color:"var(--dim)",marginLeft:".4rem",fontWeight:400}}>({m.doseLabel})</span>}
+          {/* Med Section renderer */}
+          {[
+            { label:"🌅 Morning", meds:morning },
+            { label:"☀️ Afternoon", meds:afternoon },
+            { label:"🌙 Night / Dinner", meds:night },
+          ].map(({label, meds})=>(
+            meds.length===0 ? null :
+            <div key={label}>
+              <div className="sec">{label}</div>
+              <div style={{display:"flex",flexDirection:"column",gap:".45rem"}}>
+                {meds.map(m=>{
+                  const locked=m.sundayOnly&&!isSunday();
+                  return(
+                    <div key={m.id}
+                      className={`med-row${(medLog[m.id]||locked)?" taken":""}`}
+                      style={locked?{opacity:.48,cursor:"default"}:{}}
+                      onClick={()=>!locked&&toggleMed(m.id,countableMeds)}>
+                      <div className={`check${medLog[m.id]?" done":""}${popId===m.id?" pop":""}`}
+                        style={{borderColor:medLog[m.id]?"#4ECCA3":locked?"var(--dim)":m.color}}>
+                        {medLog[m.id]&&"✓"}
                       </div>
-                      <div style={{fontSize:".68rem",color:"var(--dim)"}}>{m.generic} · {m.purpose}</div>
-                      {locked&&<div style={{fontSize:".6rem",color:"#F7C948",marginTop:".15rem"}}>☀️ Only on Sundays</div>}
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:".9rem",fontWeight:600,
+                          color:(medLog[m.id]||locked)?"var(--dim)":"var(--text)",
+                          textDecoration:medLog[m.id]?"line-through":"none",
+                          display:"flex",alignItems:"center",gap:".4rem",flexWrap:"wrap"}}>
+                          {m.name}
+                          {m.isPowder&&<span style={{fontSize:".55rem",background:"rgba(78,204,163,.15)",color:"#4ECCA3",border:"1px solid rgba(78,204,163,.3)",borderRadius:"8px",padding:".1rem .35rem",fontWeight:500}}>powder</span>}
+                          {m.doseLabel&&<span style={{fontSize:".62rem",color:"var(--dim)",fontWeight:400}}>({m.doseLabel})</span>}
+                        </div>
+                        <div style={{fontSize:".67rem",color:"var(--dim)",marginTop:".1rem"}}>
+                          {m.note||m.generic}
+                          {m.doctor&&<span style={{color:"var(--dim)",opacity:.7}}> · {m.doctor}</span>}
+                        </div>
+                        {locked&&<div style={{fontSize:".6rem",color:"#F7C948",marginTop:".15rem"}}>☀️ Only on Sundays — after lunch</div>}
+                      </div>
+                      <div style={{width:8,height:8,borderRadius:"50%",background:m.color,flexShrink:0,boxShadow:`0 0 6px ${m.color}`}}/>
                     </div>
-                    <div style={{width:8,height:8,borderRadius:"50%",background:m.color,flexShrink:0,boxShadow:`0 0 6px ${m.color}`}}/>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-
-          {/* Night */}
-          <div>
-            <div className="sec">🌙 Night</div>
-            <div style={{display:"flex",flexDirection:"column",gap:".45rem"}}>
-              {night.map(m=>(
-                <div key={m.id} className={`med-row${medLog[m.id]?" taken":""}`}
-                  onClick={()=>toggleMed(m.id,countableMeds)}>
-                  <div className={`check${medLog[m.id]?" done":""}${popId===m.id?" pop":""}`}
-                    style={{borderColor:medLog[m.id]?"#4ECCA3":m.color}}>
-                    {medLog[m.id]&&"✓"}
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:".9rem",fontWeight:600,color:medLog[m.id]?"var(--dim)":"var(--text)",textDecoration:medLog[m.id]?"line-through":"none"}}>
-                      {m.name}{m.doseLabel&&<span style={{fontSize:".65rem",color:"var(--dim)",marginLeft:".4rem",fontWeight:400}}>({m.doseLabel})</span>}
-                    </div>
-                    <div style={{fontSize:".68rem",color:"var(--dim)"}}>{m.generic} · {m.purpose}</div>
-                  </div>
-                  <div style={{width:8,height:8,borderRadius:"50%",background:m.color,flexShrink:0,boxShadow:`0 0 6px ${m.color}`}}/>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
 
           {/* Quote */}
           <div className="card" style={{padding:"1.4rem 1.3rem",background:"linear-gradient(135deg,rgba(55,15,110,.35),rgba(180,142,255,.06))",borderColor:"rgba(180,142,255,.2)",textAlign:"center",position:"relative",overflow:"hidden"}}>
