@@ -15,7 +15,9 @@ const MEDS = [
   // ── Afternoon (Sunday only) ─────────────────────────────
   { id:"purevise",  name:"Purevise 60k",generic:"Vitamin D3 60,000 IU",purpose:"Vitamin D",          slot:"afternoon", color:"#F7C948", sundayOnly:true, note:"After lunch", doctor:"Dr. Sunaina Dubey" },
   // ── Night / Dinner ──────────────────────────────────────
+  { id:"codesoft_m", name:"Codesoft XT", generic:"Codesoft XT", purpose:"Supplement",        slot:"morning", color:"#34D399", note:"After breakfast", doctor:"Gynaecologist", duration:"×15 days" },
   { id:"concuims_n",name:"Concuims XT", generic:"Curcumin XT",         purpose:"Anti-inflammatory",  slot:"night",     color:"#F5A623", note:"After dinner", doctor:"Dr. Sunaina Dubey" },
+  { id:"codesoft_n", name:"Codesoft XT", generic:"Codesoft XT", purpose:"Supplement",        slot:"night",   color:"#34D399", note:"After dinner",    doctor:"Gynaecologist", duration:"×15 days" },
   { id:"trazer_n",  name:"Trazer HD",   generic:"Powder supplement",   purpose:"Bone & Nutrition",   slot:"night",     color:"#4ECCA3", note:"After dinner · powder", doctor:"Dr. Sunaina Dubey", isPowder:true },
   { id:"tofanol",   name:"Tofanol 5mg", generic:"Tofacitinib 5mg",     purpose:"Rheumatoid Arthritis",slot:"night",    color:"#7EB8F7", note:"After dinner", doctor:"Dr. Nitesh Jain" },
 ];
