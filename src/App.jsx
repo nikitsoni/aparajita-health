@@ -598,33 +598,55 @@ export default function AparajitaHealth(){
 
           {/* Daily log */}
           <div>
-            <div className="sec">💊 Daily Log</div>
-            {medHist.length===0?(
-              <div style={{textAlign:"center",padding:"2rem",fontFamily:"Cormorant Garamond,serif",fontSize:"1.1rem",color:"var(--dim)"}}>Start logging meds to see history 🌸</div>
-            ):[...medHist].sort((a,b)=>b.date<a.date?-1:1).map(d=>{
-              const s=d.pct>=1?"#4ECCA3":d.pct>=.5?"#B48EFF":"#F5A623";
-              const bar=Math.round((d.pct||0)*100);
-              return(
-                <div key={d.date} className="card fade-up" style={{padding:".9rem 1rem",marginBottom:".5rem",display:"flex",alignItems:"center",gap:"1rem"}}>
-                  <div style={{flexShrink:0,textAlign:"center",minWidth:48}}>
-                    <div style={{fontFamily:"Cormorant Garamond,serif",fontSize:"1.5rem",color:s,lineHeight:1}}>{fmtDate(d.date).split(" ")[0]}</div>
-                    <div style={{fontSize:".6rem",color:"var(--dim)"}}>{fmtDate(d.date).split(" ")[1]}</div>
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:".3rem"}}>
-                      <span style={{fontSize:".72rem",color:"var(--text)"}}>{d.taken}/{d.total} meds</span>
-                      <span style={{fontSize:".72rem",color:s,fontWeight:600}}>{bar}%</span>
+            <div className="sec">💊 Daily Log <span style={{fontSize:".7rem",color:"var(--dim)",fontFamily:"DM Sans",fontWeight:400}}>— last 30 days</span></div>
+            {Array.from({length:30},(_,i)=>{
+              const d=new Date(); d.setDate(d.getDate()-i);
+              const ds=d.toISOString().split("T")[0];
+              const rec=medHist.find(h=>h.date===ds);
+              const isToday=ds===todayStr();
+              if(rec){
+                const s=rec.pct>=1?"#4ECCA3":rec.pct>=.5?"#B48EFF":"#F5A623";
+                const bar=Math.round((rec.pct||0)*100);
+                return(
+                  <div key={ds} className="card fade-up" style={{padding:".9rem 1rem",marginBottom:".5rem",display:"flex",alignItems:"center",gap:"1rem"}}>
+                    <div style={{flexShrink:0,textAlign:"center",minWidth:48}}>
+                      <div style={{fontFamily:"Cormorant Garamond,serif",fontSize:"1.5rem",color:s,lineHeight:1}}>{fmtDate(ds).split(" ")[0]}</div>
+                      <div style={{fontSize:".6rem",color:"var(--dim)"}}>{fmtDate(ds).split(" ")[1]}</div>
+                      {isToday&&<div style={{fontSize:".5rem",color:"var(--purple)",fontWeight:600,marginTop:".1rem"}}>TODAY</div>}
                     </div>
-                    <div style={{height:5,borderRadius:3,background:"rgba(255,255,255,.06)",overflow:"hidden"}}>
-                      <div style={{height:"100%",width:`${bar}%`,background:s,borderRadius:3,transition:"width .4s ease"}}/>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:".3rem"}}>
+                        <span style={{fontSize:".72rem",color:"var(--text)"}}>{rec.taken}/{rec.total} meds</span>
+                        <span style={{fontSize:".72rem",color:s,fontWeight:600}}>{bar}%</span>
+                      </div>
+                      <div style={{height:5,borderRadius:3,background:"rgba(255,255,255,.06)",overflow:"hidden"}}>
+                        <div style={{height:"100%",width:`${bar}%`,background:s,borderRadius:3,transition:"width .4s ease"}}/>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:".4rem"}}>
+                      <span style={{fontSize:"1.1rem"}}>{rec.pct>=1?"🎯":rec.pct>=.5?"💪":"💊"}</span>
+                      <button className="edit-btn" onClick={e=>{e.stopPropagation();openEdit(ds);}}>Edit</button>
                     </div>
                   </div>
-                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:".4rem"}}>
-                    <span style={{fontSize:"1.1rem"}}>{d.pct>=1?"🎯":d.pct>=.5?"💪":"💊"}</span>
-                    <button className="edit-btn" onClick={e=>{e.stopPropagation();openEdit(d.date);}}>Edit</button>
+                );
+              } else {
+                return(
+                  <div key={ds} style={{padding:".75rem 1rem",marginBottom:".5rem",display:"flex",alignItems:"center",gap:"1rem",borderRadius:12,border:"1px dashed rgba(255,255,255,0.07)",background:"rgba(255,255,255,0.01)",opacity:.7}}>
+                    <div style={{flexShrink:0,textAlign:"center",minWidth:48}}>
+                      <div style={{fontFamily:"Cormorant Garamond,serif",fontSize:"1.5rem",color:"var(--dim)",lineHeight:1}}>{fmtDate(ds).split(" ")[0]}</div>
+                      <div style={{fontSize:".6rem",color:"var(--dim)"}}>{fmtDate(ds).split(" ")[1]}</div>
+                      {isToday&&<div style={{fontSize:".5rem",color:"var(--purple)",fontWeight:600,marginTop:".1rem"}}>TODAY</div>}
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:".72rem",color:"var(--dim)"}}>No log recorded</div>
+                      <div style={{height:5,borderRadius:3,background:"rgba(255,255,255,.04)",marginTop:".4rem"}}/>
+                    </div>
+                    <button className="edit-btn" style={{background:"rgba(78,204,163,.07)",borderColor:"rgba(78,204,163,.2)",color:"var(--green)"}} onClick={e=>{e.stopPropagation();openEdit(ds);}}>
+                      + Add
+                    </button>
                   </div>
-                </div>
-              );
+                );
+              }
             })}
           </div>
 
