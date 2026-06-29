@@ -168,6 +168,14 @@ body{background:var(--bg);}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .fade-up{animation:fadeUp .4s ease forwards;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:1rem;}
+.modal{background:#120A28;border:1px solid rgba(180,142,255,.25);border-radius:20px 20px 16px 16px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:1.4rem;animation:slideUp .25s ease;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--text);}
+.modal-close{background:rgba(255,255,255,.07);border:none;border-radius:50%;width:30px;height:30px;color:var(--muted);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;}
+.edit-btn{background:rgba(180,142,255,.08);border:1px solid rgba(180,142,255,.2);border-radius:8px;color:var(--purple);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.65rem;font-weight:600;padding:.25rem .6rem;transition:all .2s;flex-shrink:0;}
+.edit-btn:hover{background:rgba(180,142,255,.18);}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
 `;
 
 // ── Flower ───────────────────────────────────────────────────
@@ -209,6 +217,9 @@ export default function AparajitaHealth(){
   const [popId,    setPopId]    = useState(null);
   const [bpForm,   setBpForm]   = useState({sys:"",dia:"",pulse:"",notes:""});
   const [bpSaved,  setBpSaved]  = useState(false);
+  const [editDate, setEditDate] = useState(null);   // date string being edited
+  const [editLog,  setEditLog]  = useState({});     // log_data for that date
+  const [editSaving,setEditSaving]=useState(false);
   const [exporting,setExporting]= useState(false);
   const [exportMonth, setExportMonth] = useState(new Date().getMonth());
   const [exportYear,  setExportYear]  = useState(new Date().getFullYear());
@@ -333,6 +344,29 @@ export default function AparajitaHealth(){
   },[exportMonth, exportYear]);
 
   // ── Derived ─────────────────────────────────────────────────
+
+  const openEdit = useCallback(async(date) => {
+    setEditDate(date);
+    setEditLog({});
+    try { const row=await db.getMedLog(date); if(row?.log_data) setEditLog(row.log_data); } catch(e){}
+  },[]);
+
+  const saveEdit = useCallback(async() => {
+    if(!editDate) return;
+    setEditSaving(true);
+    const isSun = new Date(editDate+"T12:00:00").getDay()===0;
+    const dayMeds = MEDS.filter(m=>!m.sundayOnly||isSun);
+    const taken=dayMeds.filter(m=>editLog[m.id]).length;
+    const total=dayMeds.length;
+    const pct=total>0?taken/total:0;
+    try {
+      await db.upsertMedLog(editDate,editLog,taken,total,pct);
+      setMedHist(prev=>[{date:editDate,taken,total,pct},...prev.filter(d=>d.date!==editDate)]);
+    } catch(e){}
+    setEditSaving(false);
+    setEditDate(null);
+  },[editDate,editLog]);
+
   const countableMeds  = MEDS.filter(m=>!m.sundayOnly||isSunday());
   const morning        = MEDS.filter(m=>m.slot==="morning");
   const afternoon      = MEDS.filter(m=>m.slot==="afternoon");
@@ -585,7 +619,10 @@ export default function AparajitaHealth(){
                       <div style={{height:"100%",width:`${bar}%`,background:s,borderRadius:3,transition:"width .4s ease"}}/>
                     </div>
                   </div>
-                  <span style={{fontSize:"1.1rem"}}>{d.pct>=1?"🎯":d.pct>=.5?"💪":"💊"}</span>
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:".4rem"}}>
+                    <span style={{fontSize:"1.1rem"}}>{d.pct>=1?"🎯":d.pct>=.5?"💪":"💊"}</span>
+                    <button className="edit-btn" onClick={e=>{e.stopPropagation();openEdit(d.date);}}>Edit</button>
+                  </div>
                 </div>
               );
             })}
@@ -747,6 +784,64 @@ export default function AparajitaHealth(){
       )}
 
       <div style={{height:"2rem",background:"linear-gradient(to top,rgba(55,15,110,.2),transparent)",pointerEvents:"none"}}/>
+
+      {/* ═══ EDIT PAST DAY MODAL ═══ */}
+      {editDate && (
+        <div className="modal-overlay" onClick={()=>setEditDate(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <div className="modal-title">Edit {fmtDate(editDate)}</div>
+                <div style={{fontSize:".65rem",color:"var(--muted)",marginTop:".15rem"}}>Tap to toggle · changes save to cloud</div>
+              </div>
+              <button className="modal-close" onClick={()=>setEditDate(null)}>✕</button>
+            </div>
+
+            {[
+              {label:"🌅 Morning",   meds:MEDS.filter(m=>m.slot==="morning")},
+              {label:"☀️ Afternoon", meds:MEDS.filter(m=>m.slot==="afternoon")},
+              {label:"🌙 Night",     meds:MEDS.filter(m=>m.slot==="night")},
+            ].map(({label,meds})=>meds.length===0?null:(
+              <div key={label} style={{marginBottom:"1rem"}}>
+                <div style={{fontSize:".65rem",color:"var(--muted)",letterSpacing:".1em",textTransform:"uppercase",marginBottom:".45rem"}}>{label}</div>
+                <div style={{display:"flex",flexDirection:"column",gap:".4rem"}}>
+                  {meds.map(m=>{
+                    const locked=m.sundayOnly&&new Date(editDate+"T12:00:00").getDay()!==0;
+                    if(locked) return null;
+                    const isTaken=!!editLog[m.id];
+                    return(
+                      <div key={m.id}
+                        className={`med-row${isTaken?" taken":""}`}
+                        onClick={()=>setEditLog(prev=>({...prev,[m.id]:!prev[m.id]}))}>
+                        <div className={`check${isTaken?" done":""}`} style={{borderColor:isTaken?"#4ECCA3":m.color}}>
+                          {isTaken&&"✓"}
+                        </div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:".88rem",fontWeight:600,color:isTaken?"var(--dim)":"var(--text)",textDecoration:isTaken?"line-through":"none",display:"flex",alignItems:"center",gap:".4rem"}}>
+                            {m.name}
+                            {m.isPowder&&<span style={{fontSize:".55rem",background:"rgba(78,204,163,.15)",color:"#4ECCA3",border:"1px solid rgba(78,204,163,.3)",borderRadius:"8px",padding:".1rem .35rem"}}>powder</span>}
+                            {m.duration&&<span style={{fontSize:".55rem",background:"rgba(180,142,255,.1)",color:"var(--purple)",border:"1px solid rgba(180,142,255,.25)",borderRadius:"8px",padding:".1rem .35rem"}}>{m.duration}</span>}
+                          </div>
+                          <div style={{fontSize:".65rem",color:"var(--dim)"}}>{m.note}</div>
+                        </div>
+                        <div style={{width:8,height:8,borderRadius:"50%",background:m.color,boxShadow:`0 0 6px ${m.color}`}}/>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            <button
+              className={`btn-primary${editSaving?"":" "}`}
+              style={{marginTop:".5rem",background:editSaving?"linear-gradient(135deg,#065F46,#4ECCA3)":undefined}}
+              onClick={saveEdit}
+              disabled={editSaving}>
+              {editSaving?"✓ Saving…":"Save Changes"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
