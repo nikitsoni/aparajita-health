@@ -217,7 +217,8 @@ export default function AparajitaHealth(){
   const [popId,    setPopId]    = useState(null);
   const [bpForm,   setBpForm]   = useState({sys:"",dia:"",pulse:"",notes:""});
   const [bpSaved,  setBpSaved]  = useState(false);
-  const [editDate, setEditDate] = useState(null);   // date string being edited
+  const [showDays,  setShowDays]  = useState(30);
+  const [editDate,  setEditDate]  = useState(null);   // date string being edited
   const [editLog,  setEditLog]  = useState({});     // log_data for that date
   const [editSaving,setEditSaving]=useState(false);
   const [exporting,setExporting]= useState(false);
@@ -599,7 +600,7 @@ export default function AparajitaHealth(){
           {/* Daily log */}
           <div>
             <div className="sec">💊 Daily Log <span style={{fontSize:".7rem",color:"var(--dim)",fontFamily:"DM Sans",fontWeight:400}}>— last 30 days</span></div>
-            {Array.from({length:30},(_,i)=>{
+            {Array.from({length:showDays},(_,i)=>{
               const d=new Date(); d.setDate(d.getDate()-i);
               const ds=d.toISOString().split("T")[0];
               const rec=medHist.find(h=>h.date===ds);
@@ -649,6 +650,11 @@ export default function AparajitaHealth(){
               }
             })}
           </div>
+            <button
+              onClick={()=>setShowDays(d=>d+30)}
+              style={{width:"100%",padding:".75rem",marginTop:".25rem",background:"rgba(255,255,255,.03)",border:"1px dashed rgba(180,142,255,.18)",borderRadius:12,color:"var(--muted)",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:".75rem",letterSpacing:".06em"}}>
+              ↓ Show 30 more days
+            </button>
 
           {/* Badges */}
           <div>
