@@ -22,6 +22,18 @@ const MEDS = [
 ];
 
 // ── Quotes ───────────────────────────────────────────────────
+// ── Skincare (Dr. Suchita Parab) ────────────────────────────
+const SKINCARE = [
+  { id:"sk_fullnoir", icon:"🌿", label:"Serum Fullnoir / Densita", slot:"morning",   note:"Grey hair areas",                   doctor:"Dr. Suchita Parab", duration:"×60d" },
+  { id:"sk_blemgard", icon:"💧", label:"Serum Blemgard",           slot:"morning",   note:"Niacinamide 10%",                   doctor:"Dr. Suchita Parab", duration:"×60d" },
+  { id:"sk_sun1",     icon:"☀️", label:"LA Shield Sunscreen",      slot:"morning",   note:"1st application",                   doctor:"Dr. Suchita Parab", duration:"×30d" },
+  { id:"sk_sun2",     icon:"☀️", label:"LA Shield Sunscreen",      slot:"afternoon", note:"2nd application",                   doctor:"Dr. Suchita Parab", duration:"×30d" },
+  { id:"sk_sun3",     icon:"☀️", label:"LA Shield Sunscreen",      slot:"night",     note:"3rd application",                   doctor:"Dr. Suchita Parab", duration:"×30d" },
+  { id:"sk_vb7",      icon:"💊", label:"VB7 Blak Tablet",          slot:"night",     note:"Evening",                           doctor:"Dr. Suchita Parab", duration:"×60d" },
+  { id:"sk_retijoy",  icon:"✨", label:"Serum Retijoy",            slot:"night",     note:"Evening",                           doctor:"Dr. Suchita Parab", duration:"×60d" },
+  { id:"sk_cutiyt",   icon:"🧴", label:"Lotion Cutiyt G12",        slot:"night",     note:"Thin layer · old marks · arms/thigh",doctor:"Dr. Suchita Parab", duration:"×60d" },
+];
+
 const QUOTES = [
   { text:"She overcomes. Every single day.", author:"The meaning of Aparajita" },
   { text:"Taking your meds is an act of self-love.", author:"" },
@@ -168,6 +180,24 @@ body{background:var(--bg);}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .fade-up{animation:fadeUp .4s ease forwards;}
+.wellness-row{display:flex;align-items:center;gap:.9rem;padding:.65rem 1rem;border-radius:12px;border:1px solid rgba(78,204,163,0.1);background:rgba(78,204,163,0.03);cursor:pointer;transition:all .18s;user-select:none;}
+.wellness-row:hover{background:rgba(78,204,163,.07);border-color:rgba(78,204,163,.2);}
+.wellness-row.wdone{opacity:.5;}
+.wellness-check{width:24px;height:24px;border-radius:7px;border:2px solid rgba(78,204,163,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:all .2s;}
+.wellness-check.wdone{background:rgba(78,204,163,.2);border-color:#4ECCA3;color:#4ECCA3;}
+.sk-row{display:flex;align-items:center;gap:.9rem;padding:.65rem 1rem;border-radius:12px;border:1px solid rgba(255,156,194,0.12);background:rgba(255,156,194,0.03);cursor:pointer;transition:all .18s;user-select:none;}
+.sk-row:hover{background:rgba(255,156,194,.07);border-color:rgba(255,156,194,.2);}
+.sk-row.skdone{opacity:.5;}
+.sk-check{width:24px;height:24px;border-radius:7px;border:2px solid rgba(255,156,194,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:all .2s;}
+.sk-check.skdone{background:rgba(255,156,194,.2);border-color:#FF9CC2;color:#FF9CC2;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:1rem;}
+.modal{background:#120A28;border:1px solid rgba(180,142,255,.25);border-radius:20px 20px 16px 16px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:1.4rem;animation:slideUp .25s ease;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--text);}
+.modal-close{background:rgba(255,255,255,.07);border:none;border-radius:50%;width:30px;height:30px;color:var(--muted);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;}
+.edit-btn{background:rgba(180,142,255,.08);border:1px solid rgba(180,142,255,.2);border-radius:8px;color:var(--purple);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.65rem;font-weight:600;padding:.25rem .6rem;transition:all .2s;flex-shrink:0;}
+.edit-btn:hover{background:rgba(180,142,255,.18);}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:1rem;}
 .modal{background:#120A28;border:1px solid rgba(180,142,255,.25);border-radius:20px 20px 16px 16px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:1.4rem;animation:slideUp .25s ease;}
 .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem;}
@@ -215,7 +245,11 @@ export default function AparajitaHealth(){
   const [syncState,setSyncState]= useState("ok"); // ok | loading | error
   const [notifOk,  setNotifOk]  = useState(false);
   const [popId,    setPopId]    = useState(null);
-  const [bpForm,   setBpForm]   = useState({sys:"",dia:"",pulse:"",notes:""});
+  const [bpForm,   setBpForm]   = useState({
+    sys:"", dia:"", pulse:"", notes:"",
+    date: new Date().toISOString().split("T")[0],
+    time: new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:false}),
+  });
   const [bpSaved,  setBpSaved]  = useState(false);
   const [showDays,  setShowDays]  = useState(30);
   const [editDate,  setEditDate]  = useState(null);   // date string being edited
@@ -315,7 +349,10 @@ export default function AparajitaHealth(){
     // optimistic update
     const displayEntry={...entry, id:Date.now(), displayDate:fmtDate(entry.date), time:entry.time_str};
     setBpLogs(prev=>[displayEntry,...prev]);
-    setBpForm({sys:"",dia:"",pulse:"",notes:""});
+    setBpForm({sys:"",dia:"",pulse:"",notes:"",
+      date:new Date().toISOString().split("T")[0],
+      time:new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:false}),
+    });
     setBpSaved(true); setTimeout(()=>setBpSaved(false),2200);
     try{ await db.insertBpLog(entry); }
     catch(e){ localStorage.setItem("bp_logs_pending", JSON.stringify(entry)); }
@@ -482,49 +519,89 @@ export default function AparajitaHealth(){
             </div>
           </div>
 
-          {/* Med Section renderer */}
+          {/* Med + Wellness + Skincare sections */}
           {[
-            { label:"🌅 Morning", meds:morning },
-            { label:"☀️ Afternoon", meds:afternoon },
-            { label:"🌙 Night / Dinner", meds:night },
-          ].map(({label, meds})=>(
-            meds.length===0 ? null :
-            <div key={label}>
-              <div className="sec">{label}</div>
-              <div style={{display:"flex",flexDirection:"column",gap:".45rem"}}>
-                {meds.map(m=>{
-                  const locked=m.sundayOnly&&!isSunday();
-                  return(
-                    <div key={m.id}
-                      className={`med-row${(medLog[m.id]||locked)?" taken":""}`}
-                      style={locked?{opacity:.48,cursor:"default"}:{}}
-                      onClick={()=>!locked&&toggleMed(m.id,countableMeds)}>
-                      <div className={`check${medLog[m.id]?" done":""}${popId===m.id?" pop":""}`}
-                        style={{borderColor:medLog[m.id]?"#4ECCA3":locked?"var(--dim)":m.color}}>
-                        {medLog[m.id]&&"✓"}
-                      </div>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:".9rem",fontWeight:600,
-                          color:(medLog[m.id]||locked)?"var(--dim)":"var(--text)",
-                          textDecoration:medLog[m.id]?"line-through":"none",
-                          display:"flex",alignItems:"center",gap:".4rem",flexWrap:"wrap"}}>
-                          {m.name}
-                          {m.isPowder&&<span style={{fontSize:".55rem",background:"rgba(78,204,163,.15)",color:"#4ECCA3",border:"1px solid rgba(78,204,163,.3)",borderRadius:"8px",padding:".1rem .35rem",fontWeight:500}}>powder</span>}
-                          {m.doseLabel&&<span style={{fontSize:".62rem",color:"var(--dim)",fontWeight:400}}>({m.doseLabel})</span>}
+            { label:"🌅 Morning",          slot:"morning"   },
+            { label:"☀️ Afternoon",         slot:"afternoon" },
+            { label:"🌙 Night · Dinner",    slot:"night"     },
+          ].map(({label, slot})=>{
+            const meds    = MEDS.filter(m=>m.slot===slot);
+            const wItems  = WELLNESS.filter(w=>w.slot===slot);
+            const skItems = SKINCARE.filter(s=>s.slot===slot);
+            if(!meds.length&&!wItems.length&&!skItems.length) return null;
+            return(
+              <div key={slot}>
+                <div className="sec">{label}</div>
+                <div style={{display:"flex",flexDirection:"column",gap:".45rem"}}>
+                  {/* Meds */}
+                  {meds.map(m=>{
+                    const locked=m.sundayOnly&&!isSunday();
+                    return(
+                      <div key={m.id}
+                        className={`med-row${(medLog[m.id]||locked)?" taken":""}`}
+                        style={locked?{opacity:.48,cursor:"default"}:{}}
+                        onClick={()=>!locked&&toggleMed(m.id,countableMeds)}>
+                        <div className={`check${medLog[m.id]?" done":""}${popId===m.id?" pop":""}`}
+                          style={{borderColor:medLog[m.id]?"#4ECCA3":locked?"var(--dim)":m.color}}>
+                          {medLog[m.id]&&"✓"}
                         </div>
-                        <div style={{fontSize:".67rem",color:"var(--dim)",marginTop:".1rem"}}>
-                          {m.note||m.generic}
-                          {m.doctor&&<span style={{color:"var(--dim)",opacity:.7}}> · {m.doctor}</span>}
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:".9rem",fontWeight:600,color:(medLog[m.id]||locked)?"var(--dim)":"var(--text)",textDecoration:medLog[m.id]?"line-through":"none",display:"flex",alignItems:"center",gap:".4rem",flexWrap:"wrap"}}>
+                            {m.name}
+                            {m.isPowder&&<span style={{fontSize:".55rem",background:"rgba(78,204,163,.15)",color:"#4ECCA3",border:"1px solid rgba(78,204,163,.3)",borderRadius:"8px",padding:".1rem .35rem"}}>powder</span>}
+                            {m.duration&&<span style={{fontSize:".55rem",background:"rgba(180,142,255,.1)",color:"var(--purple)",border:"1px solid rgba(180,142,255,.25)",borderRadius:"8px",padding:".1rem .35rem"}}>{m.duration}</span>}
+                          </div>
+                          <div style={{fontSize:".67rem",color:"var(--dim)",marginTop:".1rem"}}>
+                            {m.note||m.generic}
+                            {m.doctor&&<span style={{opacity:.7}}> · {m.doctor}</span>}
+                          </div>
+                          {locked&&<div style={{fontSize:".6rem",color:"#F7C948",marginTop:".15rem"}}>☀️ Only on Sundays</div>}
                         </div>
-                        {locked&&<div style={{fontSize:".6rem",color:"#F7C948",marginTop:".15rem"}}>☀️ Only on Sundays — after lunch</div>}
+                        <div style={{width:8,height:8,borderRadius:"50%",background:m.color,flexShrink:0,boxShadow:`0 0 6px ${m.color}`}}/>
                       </div>
-                      <div style={{width:8,height:8,borderRadius:"50%",background:m.color,flexShrink:0,boxShadow:`0 0 6px ${m.color}`}}/>
+                    );
+                  })}
+                  {/* Wellness (water, egg) */}
+                  {wItems.map(w=>{
+                    const done=!!medLog[w.id];
+                    return(
+                      <div key={w.id} className={`wellness-row${done?" wdone":""}`}
+                        onClick={()=>toggleMed(w.id,countableMeds)}>
+                        <div className={`wellness-check${done?" wdone":""}`}>{done&&"✓"}</div>
+                        <span style={{fontSize:"1.1rem"}}>{w.icon}</span>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:".85rem",fontWeight:600,color:done?"var(--dim)":"var(--green)",textDecoration:done?"line-through":"none"}}>{w.label}</div>
+                          <div style={{fontSize:".65rem",color:"var(--dim)"}}>{w.note}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {/* Skincare */}
+                  {skItems.length>0&&(
+                    <div style={{marginTop:".2rem",display:"flex",flexDirection:"column",gap:".35rem"}}>
+                      {skItems.map(s=>{
+                        const done=!!medLog[s.id];
+                        return(
+                          <div key={s.id} className={`sk-row${done?" skdone":""}`}
+                            onClick={()=>toggleMed(s.id,countableMeds)}>
+                            <div className={`sk-check${done?" skdone":""}`}>{done&&"✓"}</div>
+                            <span style={{fontSize:"1.05rem"}}>{s.icon}</span>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{fontSize:".85rem",fontWeight:600,color:done?"var(--dim)":"#FF9CC2",textDecoration:done?"line-through":"none",display:"flex",alignItems:"center",gap:".3rem",flexWrap:"wrap"}}>
+                                {s.label}
+                                <span style={{fontSize:".52rem",background:"rgba(255,156,194,.1)",color:"#FF9CC2",border:"1px solid rgba(255,156,194,.25)",borderRadius:"6px",padding:".1rem .3rem"}}>{s.duration}</span>
+                              </div>
+                              <div style={{fontSize:".63rem",color:"var(--dim)"}}>{s.note}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Quote */}
           <div className="card" style={{padding:"1.4rem 1.3rem",background:"linear-gradient(135deg,rgba(55,15,110,.35),rgba(180,142,255,.06))",borderColor:"rgba(180,142,255,.2)",textAlign:"center",position:"relative",overflow:"hidden"}}>
@@ -752,6 +829,15 @@ export default function AparajitaHealth(){
           <div className="card" style={{padding:"1.2rem"}}>
             <div className="sec">➕ Log Reading</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:".65rem",marginBottom:".65rem"}}>
+              {/* Date & Time */}
+              <div>
+                <label className="inp-label">Date</label>
+                <input className="inp" type="date" value={bpForm.date||todayStr()} onChange={e=>setBpForm({...bpForm,date:e.target.value})} style={{colorScheme:"dark"}}/>
+              </div>
+              <div>
+                <label className="inp-label">Time</label>
+                <input className="inp" type="time" value={bpForm.time||""} onChange={e=>setBpForm({...bpForm,time:e.target.value})} style={{colorScheme:"dark"}}/>
+              </div>
               {[{key:"sys",label:"Systolic *",ph:"120"},{key:"dia",label:"Diastolic *",ph:"80"},{key:"pulse",label:"Pulse (bpm)",ph:"72"},{key:"notes",label:"Notes",ph:"After rest…",type:"text"}].map(f=>(
                 <div key={f.key} style={f.key==="notes"?{gridColumn:"span 2"}:{}}>
                   <label className="inp-label">{f.label}</label>
