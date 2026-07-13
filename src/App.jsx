@@ -8,20 +8,25 @@ import {
 
 // ── Medications ──────────────────────────────────────────────
 const MEDS = [
-  // ── Morning (after breakfast) ───────────────────────────
-  { id:"stamlo",    name:"Stamlo 5mg",  generic:"Amlodipine 5mg",      purpose:"Blood Pressure",     slot:"morning",   color:"#B48EFF", note:"After breakfast", doctor:"Dr. Hansra" },
-  { id:"trazer_m",  name:"Trazer HD",   generic:"Powder supplement",   purpose:"Bone & Nutrition",   slot:"morning",   color:"#4ECCA3", note:"After breakfast · powder", doctor:"Dr. Sunaina Dubey", isPowder:true },
-  // ── Afternoon (Sunday only) ─────────────────────────────
-  { id:"tracnil",   name:"Tracnil M",   generic:"Tracnil M",           purpose:"Gynaecology",         slot:"afternoon", color:"#F472B6", note:"After lunch",          doctor:"Gynaecologist", duration:"×3 months" },
-  { id:"purevise",  name:"Purevise 60k",generic:"Vitamin D3 60,000 IU",purpose:"Vitamin D",          slot:"afternoon", color:"#F7C948", sundayOnly:true, note:"After lunch", doctor:"Dr. Sunaina Dubey" },
-  // ── Night / Dinner ──────────────────────────────────────
-  { id:"codesoft_m", name:"Codesoft XT", generic:"Codesoft XT", purpose:"Supplement",        slot:"morning", color:"#34D399", note:"After breakfast", doctor:"Gynaecologist", duration:"×15 days" },
-  { id:"codesoft_n", name:"Codesoft XT", generic:"Codesoft XT", purpose:"Supplement",        slot:"night",   color:"#34D399", note:"After dinner",    doctor:"Gynaecologist", duration:"×15 days" },
-  { id:"trazer_n",  name:"Trazer HD",   generic:"Powder supplement",   purpose:"Bone & Nutrition",   slot:"night",     color:"#4ECCA3", note:"After dinner · powder", doctor:"Dr. Sunaina Dubey", isPowder:true },
-  { id:"tofanol",   name:"Tofanol 5mg", generic:"Tofacitinib 5mg",     purpose:"Rheumatoid Arthritis",slot:"night",    color:"#7EB8F7", note:"After dinner", doctor:"Dr. Nitesh Jain" },
+  // Morning
+  { id:"stamlo",   name:"Stamlo 5mg",      generic:"Amlodipine 5mg",      purpose:"Blood Pressure",      slot:"morning",   color:"#B48EFF", note:"After breakfast",          doctor:"Dr. Hansra" },
+  { id:"troynib",  name:"Troynib XR 11mg", generic:"Troynib XR",          purpose:"Rheumatoid Arthritis",slot:"morning",   color:"#C084FC", note:"After breakfast",          doctor:"Dr. Nitesh Jain" },
+  { id:"trazer_m", name:"Trazer HD",       generic:"Powder supplement",   purpose:"Bone & Nutrition",    slot:"morning",   color:"#4ECCA3", note:"After breakfast · powder", doctor:"Dr. Sunaina Dubey", isPowder:true },
+  // Afternoon
+  { id:"tracnil",  name:"Tracnil M",       generic:"Tracnil M",           purpose:"Gynaecology",         slot:"afternoon", color:"#F472B6", note:"After lunch",              doctor:"Gynaecologist", duration:"×3 months" },
+  { id:"purevise", name:"Purevise 60k",    generic:"Vitamin D3 60,000 IU",purpose:"Vitamin D",           slot:"afternoon", color:"#F7C948", note:"After lunch",              doctor:"Dr. Sunaina Dubey", sundayOnly:true },
+  // Night
+  { id:"trazer_n", name:"Trazer HD",       generic:"Powder supplement",   purpose:"Bone & Nutrition",    slot:"night",     color:"#4ECCA3", note:"After dinner · powder",    doctor:"Dr. Sunaina Dubey", isPowder:true },
 ];
 
-// ── Quotes ───────────────────────────────────────────────────
+// ── Wellness (water + egg) ───────────────────────────────────
+const WELLNESS = [
+  { id:"egg_m",   icon:"🥚", label:"1 Egg",   slot:"morning",   note:"Breakfast" },
+  { id:"water_m", icon:"💧", label:"1L Water", slot:"morning",   note:"With breakfast" },
+  { id:"water_a", icon:"💧", label:"1L Water", slot:"afternoon", note:"With lunch" },
+  { id:"water_n", icon:"💧", label:"1L Water", slot:"night",     note:"With dinner" },
+];
+
 // ── Skincare (Dr. Suchita Parab) ────────────────────────────
 const SKINCARE = [
   { id:"sk_fullnoir", icon:"🌿", label:"Serum Fullnoir / Densita", slot:"morning",   note:"Grey hair areas",                   doctor:"Dr. Suchita Parab", duration:"×60d" },
