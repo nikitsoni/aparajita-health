@@ -39,6 +39,13 @@ const SKINCARE = [
   { id:"sk_cutiyt",   icon:"🧴", label:"Lotion Cutiyt G12",        slot:"night",     note:"Thin layer · old marks · arms/thigh",doctor:"Dr. Suchita Parab", duration:"×60d" },
 ];
 
+// ── Nikit's Meds ────────────────────────────────────────────
+const NIKIT_MEDS = [
+  { id:"nk_minfin",  icon:"💆", name:"Solution Minfin F",  generic:"Minoxidil + Finasteride 10/0.1%", slot:"night", color:"#38BDF8", note:"Apply to scalp · evening",    doctor:"Dr. Suchita Parab", duration:"×60d" },
+  { id:"nk_d3",      icon:"☀️", name:"Uprise D3 60000 IU", generic:"Cholecalciferol",                slot:"morning",color:"#F7C948", note:"After food · once a week",   doctor:"Dr. Suchita Parab", duration:"×8wks", sundayOnly:true },
+  { id:"nk_trudrm",  icon:"✨", name:"Truderma Radiance",  generic:"Radiance Serum",                  slot:"night", color:"#F472B6", note:"Apply to face · evening",    doctor:"Dr. Suchita Parab", duration:"×1mo" },
+];
+
 const QUOTES = [
   { text:"She overcomes. Every single day.", author:"The meaning of Aparajita" },
   { text:"Taking your meds is an act of self-love.", author:"" },
@@ -257,6 +264,8 @@ export default function AparajitaHealth(){
   });
   const [bpSaved,  setBpSaved]  = useState(false);
   const [showDays,  setShowDays]  = useState(30);
+  const [nikitLog,  setNikitLog]  = useState({});
+  const [nikitPop,  setNikitPop]  = useState(null);
   const [editDate,  setEditDate]  = useState(null);   // date string being edited
   const [editLog,  setEditLog]  = useState({});     // log_data for that date
   const [editSaving,setEditSaving]=useState(false);
@@ -283,6 +292,7 @@ export default function AparajitaHealth(){
         if(mRow?.log_data) setMedLog(mRow.log_data);
         setMedHist(hist);
         setBpLogs(bps);
+        try{ const nk=localStorage.getItem(`nikit:${new Date().toISOString().split("T")[0]}`); if(nk) setNikitLog(JSON.parse(nk)); }catch(_){}
         setSyncState("ok");
       }catch(e){
         setSyncState("error");
@@ -410,6 +420,13 @@ export default function AparajitaHealth(){
     setEditDate(null);
   },[editDate,editLog]);
 
+  const toggleNikit = useCallback((id)=>{
+    const updated={...nikitLog,[id]:!nikitLog[id]};
+    setNikitLog(updated);
+    setNikitPop(id); setTimeout(()=>setNikitPop(null),320);
+    try{ localStorage.setItem(`nikit:${new Date().toISOString().split("T")[0]}`,JSON.stringify(updated)); }catch(_){}
+  },[nikitLog]);
+
   const countableMeds  = MEDS.filter(m=>!m.sundayOnly||isSunday());
   const morning        = MEDS.filter(m=>m.slot==="morning");
   const afternoon      = MEDS.filter(m=>m.slot==="afternoon");
@@ -480,7 +497,7 @@ export default function AparajitaHealth(){
       </header>
 
       <nav className="ap-tabs">
-        {[["today","🌸 Today"],["progress","🏆 Progress"],["bp","❤️ BP Log"],["bphist","📋 BP History"]].map(([k,l])=>(
+        {[["today","🌸 Today"],["progress","🏆 Progress"],["bp","❤️ BP Log"],["bphist","📋 History"],["nikit","👨 Nikit"]].map(([k,l])=>(
           <button key={k} className={`ap-tab${tab===k?" active":""}`} onClick={()=>setTab(k)}>{l}</button>
         ))}
       </nav>
@@ -903,6 +920,102 @@ export default function AparajitaHealth(){
       )}
 
       <div style={{height:"2rem",background:"linear-gradient(to top,rgba(55,15,110,.2),transparent)",pointerEvents:"none"}}/>
+
+      {/* ═══ NIKIT TAB ═══ */}
+      {tab==="nikit"&&(
+        <div className="page">
+          {/* Header */}
+          <div className="card" style={{padding:"1.2rem",background:"linear-gradient(135deg,rgba(56,189,248,.08),rgba(244,114,182,.05))",borderColor:"rgba(56,189,248,.2)"}}>
+            <div style={{fontFamily:"Cormorant Garamond,serif",fontSize:"1.6rem",color:"#38BDF8",marginBottom:".2rem"}}>Nikit's Routine</div>
+            <div style={{fontSize:".7rem",color:"var(--muted)"}}>Dr. Suchita Parab · Derma Grace Skin Clinic</div>
+            <div style={{fontSize:".65rem",color:"var(--dim)",marginTop:".2rem"}}>Diagnosis: AGA (Androgenetic Alopecia)</div>
+          </div>
+
+          {/* Progress ring */}
+          {(()=>{
+            const total=NIKIT_MEDS.filter(m=>!m.sundayOnly||isSunday()).length;
+            const taken=NIKIT_MEDS.filter(m=>(!m.sundayOnly||isSunday())&&nikitLog[m.id]).length;
+            const p=total>0?taken/total:0;
+            const C2=2*Math.PI*44, off=C2*(1-p);
+            return(
+              <div className="card" style={{padding:"1.2rem",display:"flex",alignItems:"center",gap:"1.2rem"}}>
+                <svg width="80" height="80" viewBox="0 0 96 96" style={{flexShrink:0}}>
+                  <circle cx="48" cy="48" r="44" fill="none" stroke="rgba(56,189,248,.1)" strokeWidth="6"/>
+                  <circle cx="48" cy="48" r="44" fill="none" stroke={p===1?"#4ECCA3":"#38BDF8"} strokeWidth="6" strokeLinecap="round" strokeDasharray={C2} strokeDashoffset={off} transform="rotate(-90 48 48)" style={{transition:"stroke-dashoffset .6s ease"}}/>
+                  <text x="48" y="44" textAnchor="middle" fill="#EEE8FF" fontSize="16" fontFamily="Cormorant Garamond" fontWeight="500">{taken}/{total}</text>
+                  <text x="48" y="58" textAnchor="middle" fill="#8878A8" fontSize="8" fontFamily="DM Sans">done</text>
+                </svg>
+                <div>
+                  <div style={{fontFamily:"Cormorant Garamond,serif",fontSize:"1.3rem",color:"var(--text)"}}>{p===1?"All done! 🎉":p>.5?"Almost there 💪":"Let's go 💆"}</div>
+                  <div style={{fontSize:".7rem",color:"var(--muted)",marginTop:".25rem"}}>{total-taken} remaining today</div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Morning */}
+          {NIKIT_MEDS.filter(m=>m.slot==="morning").length>0&&(
+            <div>
+              <div className="sec">🌅 Morning</div>
+              <div style={{display:"flex",flexDirection:"column",gap:".45rem"}}>
+                {NIKIT_MEDS.filter(m=>m.slot==="morning").map(m=>{
+                  const locked=m.sundayOnly&&!isSunday();
+                  const done=!!nikitLog[m.id];
+                  return(
+                    <div key={m.id} className={`med-row${(done||locked)?" taken":""}`}
+                      style={locked?{opacity:.48,cursor:"default"}:{}}
+                      onClick={()=>!locked&&toggleNikit(m.id)}>
+                      <div className={`check${done?" done":""}${nikitPop===m.id?" pop":""}`} style={{borderColor:done?"#4ECCA3":locked?"var(--dim)":m.color}}>{done&&"✓"}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:".9rem",fontWeight:600,color:(done||locked)?"var(--dim)":"var(--text)",textDecoration:done?"line-through":"none",display:"flex",alignItems:"center",gap:".35rem",flexWrap:"wrap"}}>
+                          {m.icon} {m.name}
+                          <span style={{fontSize:".55rem",background:"rgba(56,189,248,.1)",color:m.color,border:`1px solid ${m.color}44`,borderRadius:"6px",padding:".1rem .3rem"}}>{m.duration}</span>
+                        </div>
+                        <div style={{fontSize:".67rem",color:"var(--dim)",marginTop:".1rem"}}>{m.note}</div>
+                        {locked&&<div style={{fontSize:".6rem",color:"#F7C948",marginTop:".1rem"}}>☀️ Once a week — Sundays</div>}
+                      </div>
+                      <div style={{width:8,height:8,borderRadius:"50%",background:m.color,flexShrink:0,boxShadow:`0 0 6px ${m.color}`}}/>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Night */}
+          {NIKIT_MEDS.filter(m=>m.slot==="night").length>0&&(
+            <div>
+              <div className="sec">🌙 Evening / Night</div>
+              <div style={{display:"flex",flexDirection:"column",gap:".45rem"}}>
+                {NIKIT_MEDS.filter(m=>m.slot==="night").map(m=>{
+                  const done=!!nikitLog[m.id];
+                  return(
+                    <div key={m.id} className={`med-row${done?" taken":""}`} onClick={()=>toggleNikit(m.id)}>
+                      <div className={`check${done?" done":""}${nikitPop===m.id?" pop":""}`} style={{borderColor:done?"#4ECCA3":m.color}}>{done&&"✓"}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:".9rem",fontWeight:600,color:done?"var(--dim)":"var(--text)",textDecoration:done?"line-through":"none",display:"flex",alignItems:"center",gap:".35rem",flexWrap:"wrap"}}>
+                          {m.icon} {m.name}
+                          <span style={{fontSize:".55rem",background:"rgba(56,189,248,.1)",color:m.color,border:`1px solid ${m.color}44`,borderRadius:"6px",padding:".1rem .3rem"}}>{m.duration}</span>
+                        </div>
+                        <div style={{fontSize:".67rem",color:"var(--dim)",marginTop:".1rem"}}>{m.note}</div>
+                      </div>
+                      <div style={{width:8,height:8,borderRadius:"50%",background:m.color,flexShrink:0,boxShadow:`0 0 6px ${m.color}`}}/>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Diet note */}
+          <div className="card" style={{padding:"1rem",borderColor:"rgba(56,189,248,.15)"}}>
+            <div style={{fontSize:".6rem",color:"#38BDF8",letterSpacing:".1em",textTransform:"uppercase",marginBottom:".5rem"}}>🥗 Diet Advice</div>
+            {["Protein: Eggs, Chicken, Fish, Sprouts, Pulse, Millet","Salad · Seeds · Fruit · Dry Fruits"].map((t,i)=>(
+              <div key={i} style={{fontSize:".75rem",color:"var(--muted)",padding:".25rem 0",borderTop:i>0?"1px solid rgba(255,255,255,.04)":"none"}}>{t}</div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ═══ EDIT PAST DAY MODAL ═══ */}
       {editDate && (
