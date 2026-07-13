@@ -6,6 +6,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const MEDS = [
   // Morning (after breakfast)
   { id:"stamlo",    name:"Stamlo 5mg",  generic:"Amlodipine 5mg",      purpose:"Blood Pressure",      slot:"morning",   color:"#B48EFF", note:"After breakfast",      doctor:"Dr. Hansra" },
+  { id:"troynib",   name:"Troynib XR 11mg",generic:"Baricitinib/Troynib XR",purpose:"Rheumatoid Arthritis", slot:"morning",   color:"#C084FC", note:"After breakfast", doctor:"Dr. Nitesh Jain" },
   { id:"lupicheme", name:"Lupicheme",   generic:"Hydroxychloroquine",  purpose:"Autoimmune / RA",     slot:"morning",   color:"#D9A0FF", note:"Morning",              doctor:"Dr. Sunaina Dubey" },
   { id:"trazer_m",  name:"Trazer HD",   generic:"Powder supplement",   purpose:"Bone & Nutrition",    slot:"morning",   color:"#4ECCA3", note:"After breakfast · powder", doctor:"Dr. Sunaina Dubey", isPowder:true },
   // Afternoon
@@ -14,7 +15,14 @@ const MEDS = [
   // Night / Dinner
   { id:"concuims_n",name:"Concuims XT", generic:"Curcumin XT",         purpose:"Anti-inflammatory",   slot:"night",     color:"#F5A623", note:"After dinner",         doctor:"Dr. Sunaina Dubey" },
   { id:"trazer_n",  name:"Trazer HD",   generic:"Powder supplement",   purpose:"Bone & Nutrition",    slot:"night",     color:"#4ECCA3", note:"After dinner · powder", doctor:"Dr. Sunaina Dubey", isPowder:true },
-  { id:"tofanol",   name:"Tofanol 5mg", generic:"Tofacitinib 5mg",     purpose:"Rheumatoid Arthritis",slot:"night",     color:"#7EB8F7", note:"After dinner",         doctor:"Dr. Nitesh Jain" },
+];
+
+// ── Wellness items (water + egg) ────────────────────────────
+const WELLNESS = [
+  { id:"egg_m",     icon:"🥚", label:"1 Egg",    slot:"morning",   note:"Breakfast" },
+  { id:"water_m",   icon:"💧", label:"1L Water",  slot:"morning",   note:"With breakfast" },
+  { id:"water_a",   icon:"💧", label:"1L Water",  slot:"afternoon", note:"With lunch" },
+  { id:"water_n",   icon:"💧", label:"1L Water",  slot:"night",     note:"With dinner" },
 ];
 
 const QUOTES = [
@@ -128,6 +136,19 @@ body{background:var(--bg);}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .fade-up{animation:fadeUp .4s ease forwards;}
+.wellness-row{display:flex;align-items:center;gap:.9rem;padding:.65rem 1rem;border-radius:12px;border:1px solid rgba(78,204,163,0.1);background:rgba(78,204,163,0.03);cursor:pointer;transition:all .18s;user-select:none;}
+.wellness-row:hover{background:rgba(78,204,163,.07);border-color:rgba(78,204,163,.2);}
+.wellness-row.wdone{opacity:.5;}
+.wellness-check{width:24px;height:24px;border-radius:7px;border:2px solid rgba(78,204,163,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:all .2s;}
+.wellness-check.wdone{background:rgba(78,204,163,.2);border-color:#4ECCA3;color:#4ECCA3;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:1rem;}
+.modal{background:#120A28;border:1px solid rgba(180,142,255,.25);border-radius:20px 20px 16px 16px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:1.4rem;animation:slideUp .25s ease;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--text);}
+.modal-close{background:rgba(255,255,255,.07);border:none;border-radius:50%;width:30px;height:30px;color:var(--muted);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;}
+.edit-btn{background:rgba(180,142,255,.08);border:1px solid rgba(180,142,255,.2);border-radius:8px;color:var(--purple);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.65rem;font-weight:600;padding:.25rem .6rem;transition:all .2s;flex-shrink:0;}
+.edit-btn:hover{background:rgba(180,142,255,.18);}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
 .sync{display:block;text-align:center;font-size:.62rem;color:var(--muted);letter-spacing:.04em;}
 .sync span{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:.3rem;vertical-align:middle;}
 .sync.ok span{background:#4ECCA3;}.sync.err span{background:#FF6B6B;}.sync.loading span{background:#F7C948;animation:pulse 1s infinite;}
@@ -297,7 +318,7 @@ export default function AparajitaHealth(){
     </div>
   );
 
-  const SECTIONS=[{label:"🌅 Morning",meds:morning},{label:"☀️ Afternoon",meds:afternoon},{label:"🌙 Night · Dinner",meds:night}];
+  const SECTIONS=[{label:"🌅 Morning",meds:morning,slot:"morning"},{label:"☀️ Afternoon",meds:afternoon,slot:"afternoon"},{label:"🌙 Night · Dinner",meds:night,slot:"night"}];
 
   return(
     <div className="ap-root">
@@ -345,15 +366,33 @@ export default function AparajitaHealth(){
             </div>
           </div>
 
-          {/* Med sections */}
-          {SECTIONS.map(({label,meds})=>meds.length===0?null:(
-            <div key={label}>
-              <div className="sec">{label}</div>
-              <div style={{display:"flex",flexDirection:"column",gap:".45rem"}}>
-                {meds.map(m=><MedRow key={m.id} m={m} taken={!!medLog[m.id]} locked={m.sundayOnly&&!isSunday()} pop={popId===m.id} onToggle={()=>toggleMed(m.id,countable)}/>)}
+          {/* Med sections + Wellness */}
+          {SECTIONS.map(({label,meds,slot})=>{
+            const wItems=WELLNESS.filter(w=>w.slot===slot);
+            if(meds.length===0&&wItems.length===0) return null;
+            return(
+              <div key={label}>
+                <div className="sec">{label}</div>
+                <div style={{display:"flex",flexDirection:"column",gap:".45rem"}}>
+                  {meds.map(m=><MedRow key={m.id} m={m} taken={!!medLog[m.id]} locked={m.sundayOnly&&!isSunday()} pop={popId===m.id} onToggle={()=>toggleMed(m.id,countable)}/>)}
+                  {wItems.map(w=>{
+                    const done=!!medLog[w.id];
+                    return(
+                      <div key={w.id} className={`wellness-row${done?" wdone":""}`}
+                        onClick={()=>toggleMed(w.id,countable)}>
+                        <div className={`wellness-check${done?" wdone":""}`}>{done&&"✓"}</div>
+                        <span style={{fontSize:"1.1rem"}}>{w.icon}</span>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:".85rem",fontWeight:600,color:done?"var(--dim)":"var(--green)",textDecoration:done?"line-through":"none"}}>{w.label}</div>
+                          <div style={{fontSize:".65rem",color:"var(--dim)"}}>{w.note}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Quote */}
           <div className="card" style={{padding:"1.4rem 1.3rem",background:"linear-gradient(135deg,rgba(55,15,110,.35),rgba(180,142,255,.06))",borderColor:"rgba(180,142,255,.2)",textAlign:"center",position:"relative",overflow:"hidden"}}>
