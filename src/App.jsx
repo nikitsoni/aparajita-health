@@ -42,6 +42,7 @@ const SKINCARE = [
 // ── Nikit's Meds ────────────────────────────────────────────
 const NIKIT_MEDS = [
   { id:"nk_minfin",  icon:"💆", name:"Solution Minfin F",  generic:"Minoxidil + Finasteride 10/0.1%", slot:"night", color:"#38BDF8", note:"Apply to scalp · evening",    doctor:"Dr. Suchita Parab", duration:"×60d" },
+  { id:"nk_glutaderm", icon:"💊", name:"Tab Glutaderm",      generic:"Glutathione",                    slot:"morning", color:"#A78BFA", note:"Morning · 1 tablet",         doctor:"Dr. Suchita Parab", duration:"×30d" },
   { id:"nk_d3",      icon:"☀️", name:"Uprise D3 60000 IU", generic:"Cholecalciferol",                slot:"morning",color:"#F7C948", note:"After food · once a week",   doctor:"Dr. Suchita Parab", duration:"×8wks", sundayOnly:true },
   { id:"nk_trudrm",  icon:"✨", name:"Truderma Radiance",  generic:"Radiance Serum",                  slot:"night", color:"#F472B6", note:"Apply to face · evening",    doctor:"Dr. Suchita Parab", duration:"×1mo" },
 ];
